@@ -58,7 +58,7 @@ class AudioExtractor(private val context: Context) {
 
             val startTimeUs = startTimeMs * 1000L
             val endTimeUs   = startTimeUs + (durationMs * 1000L)
-            extractor.seekTo(startTimeUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+            extractor.seekTo(startTimeUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
 
             val mime = format.getString(MediaFormat.KEY_MIME) ?: return@withContext FloatArray(0)
 

@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
  */
 class WhisperTranscriptionEngineImpl(
     private val context: Context,
-    private val modelAssetPath: String = "ggml-tiny.en.bin"
+    private val modelAssetPath: String = "ggml-tiny.bin"
 ) : TranscriptionEngine {
 
     private val mutex = Mutex()
@@ -93,7 +93,7 @@ class WhisperTranscriptionEngineImpl(
         mutex.withLock {
             Log.d(TAG, "Transcribing chunk $chunkIndex (${pcmData.size} samples)")
             // ggml-tiny.en.bin is English ASR only.
-            val raw = transcribeNative(nativeContextPointer, pcmData, false)
+            val raw = transcribeNative(nativeContextPointer, pcmData, true)
             val segments = parseTimedSegments(raw)
             Log.d(TAG, "Chunk $chunkIndex produced ${segments.size} segment(s)")
             return@withContext segments

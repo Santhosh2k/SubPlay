@@ -37,7 +37,7 @@ class PlayerViewModel(
     val playerController = ExoPlayerController(context)
     private val audioExtractor = AudioExtractor(context)
     private val transcriptionEngine: TranscriptionEngine =
-        WhisperTranscriptionEngineImpl(context, "ggml-tiny.en.bin")
+        WhisperTranscriptionEngineImpl(context, "ggml-tiny.bin")
 
     private val videoUri = Uri.parse(videoUriString)
 
@@ -160,12 +160,16 @@ class PlayerViewModel(
 
         if (cachedText != null) {
             _activeSubtitleText.value = cachedText
-        } else if (isEngineReady) {
+        } else {
             // Keep prior overlay while this chunk is decoding so the UI does not flicker blank.
-            triggerAiTranscriptionForChunk(currentChunkIndex)
-            // Prefetch upcoming window so text is ready when playback reaches it.
-            for (ahead in 1L..PREFETCH_AHEAD_CHUNKS) {
-                triggerAiTranscriptionForChunk(currentChunkIndex + ahead)
+            _activeSubtitleText.value = ""
+
+            if(isEngineReady) {
+                triggerAiTranscriptionForChunk(currentChunkIndex)
+                // Prefetch upcoming window so text is ready when playback reaches it.
+                for (ahead in 1L..PREFETCH_AHEAD_CHUNKS) {
+                    triggerAiTranscriptionForChunk(currentChunkIndex + ahead)
+                }
             }
         }
     }
@@ -179,6 +183,9 @@ class PlayerViewModel(
             try {
                 val startTimeMs = chunkIndex * CHUNK_DURATION_MS
 
+                // Log to verify we are requesting different timestamps
+                Log.d(TAG, "Starting extraction for Chunk $chunkIndex at ${startTimeMs}ms")
+
                 withContext(Dispatchers.Main) {
                     if (playerController.currentPosition.value / CHUNK_DURATION_MS == chunkIndex) {
                         _statusText.value = "Transcribing ${startTimeMs / 1000}s…"
@@ -191,10 +198,16 @@ class PlayerViewModel(
                     durationMs = CHUNK_DURATION_MS
                 )
 
-                val translatedText = if (rawPcm.isNotEmpty()) {
-                    transcriptionEngine.transcribeAndTranslate(rawPcm, chunkIndex).toString()
+                var translatedText : String = ""
+
+                if (rawPcm.isNotEmpty()) {
+                val result = transcriptionEngine.transcribeAndTranslate(rawPcm, chunkIndex)
+
+                // Break it to ONLY text here
+                 translatedText = result.joinToString(separator = " ") { it.text }.trim()
+//                    transcriptionEngine.transcribeAndTranslate(rawPcm, chunkIndex).toString()
                 } else {
-                    "[Translating....]"
+                    translatedText = "Translating...."
                 }
 
                 // Cache successful runs only (including silence). Never cache "not ready" skips.

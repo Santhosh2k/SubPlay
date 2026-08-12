@@ -156,7 +156,7 @@ fun PlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+//            verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Top Bar Overlay
             AnimatedVisibility(
@@ -233,6 +233,8 @@ fun PlayerScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             // Bottom Overlay: Subtitles & Toggle Controls
             Column(
                 modifier = Modifier
@@ -252,6 +254,7 @@ fun PlayerScreen(
                             .background(Color.Black.copy(alpha = 0.72f), RoundedCornerShape(8.dp))
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                             .widthIn(max = 640.dp)
+                            .align(Alignment.CenterHorizontally)
                     ) {
                         Text(
                             text = activeSubtitleText,
